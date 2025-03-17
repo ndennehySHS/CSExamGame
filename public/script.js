@@ -1,7 +1,7 @@
 // public/script.js
 
 // Replace with your Vercel deployment URL
-const API_BASE = 'https://your-vercel-app.vercel.app';
+const API_BASE = 'https://database-example-rho.vercel.app/';
 
 document.addEventListener('DOMContentLoaded', function() {
   const salesList = document.getElementById('sales');
