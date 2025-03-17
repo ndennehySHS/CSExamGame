@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function fetchSales() {
     try {
-      const res = await fetch(`${API_BASE}/api/sales`);
+      const res = await fetch(`${API_BASE}/api/sales/`);
       const sales = await res.json();
       salesList.innerHTML = '';
       sales.forEach(sale => {
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function fetchUsers() {
     try {
-      const res = await fetch(`${API_BASE}/api/users`);
+      const res = await fetch(`${API_BASE}/api/users/`);
       const users = await res.json();
       userSelect.innerHTML = '<option value="">Select User</option>';
       users.forEach(user => {
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/sale`, {
+      const res = await fetch(`${API_BASE}/api/sale/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, saleAmount })
