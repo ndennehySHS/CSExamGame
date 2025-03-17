@@ -1,7 +1,7 @@
 // public/script.js
 
-// Replace with your Vercel deployment URL
-const API_BASE = 'https://database-example-rho.vercel.app/';
+// Set API_BASE without trailing slash.
+const API_BASE = 'https://database-example-rho.vercel.app';
 
 document.addEventListener('DOMContentLoaded', function() {
   const salesList = document.getElementById('sales');
@@ -10,9 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const saleAmountInput = document.getElementById('sale-amount');
   const addSaleBtn = document.getElementById('add-sale');
 
+  // Fetch and display aggregated sales data
   async function fetchSales() {
     try {
-      const res = await fetch(`${API_BASE}/api/sales/`);
+      const res = await fetch(`${API_BASE}/api/sales`);
       const sales = await res.json();
       salesList.innerHTML = '';
       sales.forEach(sale => {
@@ -25,9 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Fetch and populate the user dropdown
   async function fetchUsers() {
     try {
-      const res = await fetch(`${API_BASE}/api/users/`);
+      const res = await fetch(`${API_BASE}/api/users`);
       const users = await res.json();
       userSelect.innerHTML = '<option value="">Select User</option>';
       users.forEach(user => {
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Add a new sale
   addSaleBtn.addEventListener('click', async () => {
     const user = userSelect.value;
     const saleAmount = saleAmountInput.value;
@@ -49,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/sale/`, {
+      const res = await fetch(`${API_BASE}/api/sale`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, saleAmount })
@@ -67,11 +70,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Refresh button click handler
   refreshBtn.addEventListener('click', async () => {
     await fetchSales();
     await fetchUsers();
   });
 
+  // Initial fetch on page load
   fetchSales();
   fetchUsers();
 });
