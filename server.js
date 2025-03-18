@@ -1,24 +1,27 @@
+// server.js
 const express = require('express');
 const path = require('path');
 const { MongoClient } = require('mongodb');
-const { mongoUrl } = require('./config');  // Import the mongoUrl from config.js
+const config = require('./config'); // Load configuration from config.js
 
 const app = express();
-const port = process.env.PORT || 3000;
-const dbName = 'mongodbVSCodePlaygroundDB';
+const port = config.port;
 let db;
 
-// Connect to MongoDB
-MongoClient.connect(mongoUrl)
+// Connect to MongoDB using the connection string from the .env file, then select the specified database.
+MongoClient.connect(config.mongoUrl, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
   .then(client => {
     console.log('Connected to MongoDB');
-    db = client.db(dbName);
+    db = client.db(config.dbName);
   })
   .catch(err => {
     console.error('MongoDB connection error:', err);
   });
 
-// Parse JSON bodies
+// Middleware to parse JSON bodies
 app.use(express.json());
 
 // Serve static files from the "public" folder
@@ -35,7 +38,7 @@ app.get('/sales', async (req, res) => {
         }
       },
       {
-        $sort: { totalSaleAmount: -1 } // Sort descending: largest totals first
+        $sort: { totalSaleAmount: -1 } // Descending sort: largest totals first
       }
     ]).toArray();
     res.json(sales);
@@ -44,7 +47,7 @@ app.get('/sales', async (req, res) => {
   }
 });
 
-// Endpoint to get the list of distinct users (items)
+// Endpoint to get a list of distinct users (items)
 app.get('/users', async (req, res) => {
   try {
     const users = await db.collection('sales').distinct("item");
@@ -55,14 +58,13 @@ app.get('/users', async (req, res) => {
 });
 
 // Endpoint to add a new sale
-// Expects JSON: { user: "username", saleAmount: number }
+// Expects JSON body: { user: "username", saleAmount: number }
 app.post('/sale', async (req, res) => {
   try {
     const { user, saleAmount } = req.body;
     if (!user || !saleAmount) {
       return res.status(400).json({ error: 'Missing user or saleAmount' });
     }
-    // For simplicity, treat saleAmount as the price with a quantity of 1.
     const sale = {
       item: user,
       price: Number(saleAmount),
