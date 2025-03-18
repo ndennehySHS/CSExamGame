@@ -1,8 +1,6 @@
 // public/script.js
 
-// If your backend API is hosted on a different domain, update API_BASE accordingly.
-// For example: const API_BASE = 'https://your-vercel-app-url.com';
-// For local development (or same origin), you can leave it empty.
+// When hosted on Vercel, the API endpoints are available under /api
 const API_BASE = '';
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -16,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fetch and display aggregated scores (scoreboard)
   async function fetchScores() {
     try {
-      const res = await fetch(`${API_BASE}/scores`);
+      const res = await fetch(`${API_BASE}/api/scores`);
       const scores = await res.json();
       scoreboardList.innerHTML = '';
       scores.forEach(entry => {
@@ -32,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fetch and populate the student dropdown
   async function fetchStudents() {
     try {
-      const res = await fetch(`${API_BASE}/students`);
+      const res = await fetch(`${API_BASE}/api/students`);
       const students = await res.json();
       studentSelect.innerHTML = '<option value="">Select Student</option>';
       students.forEach(student => {
@@ -56,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/score`, {
+      const res = await fetch(`${API_BASE}/api/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentName, score, scoreSource })

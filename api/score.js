@@ -1,4 +1,4 @@
-// api/sale.js
+// api/score.js
 const { connectToDatabase } = require('../lib/mongo');
 
 module.exports = async (req, res) => {
@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.status(200).end();
     return;
@@ -18,19 +18,21 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { user, saleAmount } = req.body;
-    if (!user || !saleAmount) {
-      res.status(400).json({ error: 'Missing user or saleAmount' });
+    const { studentName, score, scoreSource } = req.body;
+    if (!studentName || score == null || !scoreSource) {
+      res.status(400).json({ error: 'Missing studentName, score, or scoreSource' });
       return;
     }
-    const { db } = await connectToDatabase();
-    const sale = {
-      item: user,
-      price: Number(saleAmount),
-      quantity: 1,
-      date: new Date()
+    const newScore = {
+      studentName,
+      score: Number(score),
+      scoreSource,
+      class: "Unknown", // Default value; adjust as needed
+      timetable: new Date().toISOString()
     };
-    const result = await db.collection('sales').insertOne(sale);
+
+    const { db } = await connectToDatabase();
+    const result = await db.collection('CSExamGame-UserScoreBoard').insertOne(newScore);
     res.status(200).json({ insertedId: result.insertedId });
   } catch (error) {
     res.status(500).json({ error: error.message });
