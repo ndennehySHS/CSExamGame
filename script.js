@@ -1,82 +1,85 @@
 // public/script.js
 
-// Set API_BASE without trailing slash.
-const API_BASE = 'https://database-example-rho.vercel.app';
+// If your backend API is hosted on a different domain, update API_BASE accordingly.
+// For example: const API_BASE = 'https://your-vercel-app-url.com';
+// For local development (or same origin), you can leave it empty.
+const API_BASE = '';
 
 document.addEventListener('DOMContentLoaded', function() {
-  const salesList = document.getElementById('sales');
+  const scoreboardList = document.getElementById('scoreboard');
   const refreshBtn = document.getElementById('refresh');
-  const userSelect = document.getElementById('user-select');
-  const saleAmountInput = document.getElementById('sale-amount');
-  const addSaleBtn = document.getElementById('add-sale');
+  const studentSelect = document.getElementById('student-select');
+  const scoreSourceSelect = document.getElementById('score-source-select');
+  const scoreInput = document.getElementById('score-input');
+  const addScoreBtn = document.getElementById('add-score');
 
-  // Fetch and display aggregated sales data
-  async function fetchSales() {
+  // Fetch and display aggregated scores (scoreboard)
+  async function fetchScores() {
     try {
-      const res = await fetch(`${API_BASE}/api/sales`);
-      const sales = await res.json();
-      salesList.innerHTML = '';
-      sales.forEach(sale => {
+      const res = await fetch(`${API_BASE}/scores`);
+      const scores = await res.json();
+      scoreboardList.innerHTML = '';
+      scores.forEach(entry => {
         const li = document.createElement('li');
-        li.textContent = `${sale._id}: $${sale.totalSaleAmount.toFixed(2)}`;
-        salesList.appendChild(li);
+        li.textContent = `${entry._id}: ${entry.totalScore} points`;
+        scoreboardList.appendChild(li);
       });
     } catch (error) {
-      console.error('Error fetching sales:', error);
+      console.error('Error fetching scores:', error);
     }
   }
 
-  // Fetch and populate the user dropdown
-  async function fetchUsers() {
+  // Fetch and populate the student dropdown
+  async function fetchStudents() {
     try {
-      const res = await fetch(`${API_BASE}/api/users`);
-      const users = await res.json();
-      userSelect.innerHTML = '<option value="">Select User</option>';
-      users.forEach(user => {
+      const res = await fetch(`${API_BASE}/students`);
+      const students = await res.json();
+      studentSelect.innerHTML = '<option value="">Select Student</option>';
+      students.forEach(student => {
         const option = document.createElement('option');
-        option.value = user;
-        option.textContent = user;
-        userSelect.appendChild(option);
+        option.value = student;
+        option.textContent = student;
+        studentSelect.appendChild(option);
       });
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching students:', error);
     }
   }
 
-  // Add a new sale
-  addSaleBtn.addEventListener('click', async () => {
-    const user = userSelect.value;
-    const saleAmount = saleAmountInput.value;
-    if (!user || !saleAmount) {
-      alert('Please select a user and enter a sale amount.');
+  // Add a new score entry
+  addScoreBtn.addEventListener('click', async () => {
+    const studentName = studentSelect.value;
+    const scoreSource = scoreSourceSelect.value;
+    const score = scoreInput.value;
+    if (!studentName || !scoreSource || !score) {
+      alert('Please select a student, a score source, and enter a score.');
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/sale`, {
+      const res = await fetch(`${API_BASE}/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, saleAmount })
+        body: JSON.stringify({ studentName, score, scoreSource })
       });
       if (res.ok) {
-        saleAmountInput.value = '';
-        await fetchSales();
-        await fetchUsers();
+        scoreInput.value = '';
+        await fetchScores();
+        await fetchStudents();
       } else {
-        const error = await res.json();
-        alert('Error adding sale: ' + error.error);
+        const errorData = await res.json();
+        alert('Error adding score: ' + errorData.error);
       }
     } catch (error) {
-      console.error('Error adding sale:', error);
+      console.error('Error adding score:', error);
     }
   });
 
-  // Refresh button click handler
   refreshBtn.addEventListener('click', async () => {
-    await fetchSales();
-    await fetchUsers();
+    await fetchScores();
+    await fetchStudents();
   });
 
   // Initial fetch on page load
-  fetchSales();
-  fetchUsers();
+  fetchScores();
+  fetchStudents();
 });

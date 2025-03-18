@@ -2,19 +2,20 @@
 const express = require('express');
 const path = require('path');
 const { MongoClient } = require('mongodb');
-const config = require('./config'); // Load configuration from config.js
+const config = require('./config');
 
 const app = express();
 const port = config.port;
 let db;
 
-// Connect to MongoDB using the connection string from the .env file, then select the specified database.
+// Connect to MongoDB using the connection string from config.js and select the database.
 MongoClient.connect(config.mongoUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
   .then(client => {
     console.log('Connected to MongoDB');
+    // Note: We assume your database name is provided in DB_NAME.
     db = client.db(config.dbName);
   })
   .catch(err => {
@@ -27,51 +28,52 @@ app.use(express.json());
 // Serve static files from the "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint to get aggregated sales (grouped by user/item) sorted from largest to smallest total sale amount
-app.get('/sales', async (req, res) => {
+// GET /scores – Returns aggregated scores for each student (highest to lowest)
+app.get('/scores', async (req, res) => {
   try {
-    const sales = await db.collection('sales').aggregate([
+    const scores = await db.collection('CSExamGame-UserScoreBoard').aggregate([
       {
         $group: {
-          _id: "$item",
-          totalSaleAmount: { $sum: { $multiply: ["$price", "$quantity"] } }
+          _id: "$studentName",
+          totalScore: { $sum: "$score" }
         }
       },
       {
-        $sort: { totalSaleAmount: -1 } // Descending sort: largest totals first
+        $sort: { totalScore: -1 }
       }
     ]).toArray();
-    res.json(sales);
+    res.json(scores);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Endpoint to get a list of distinct users (items)
-app.get('/users', async (req, res) => {
+// GET /students – Returns a list of distinct student names
+app.get('/students', async (req, res) => {
   try {
-    const users = await db.collection('sales').distinct("item");
-    res.json(users);
+    const students = await db.collection('CSExamGame-UserScoreBoard').distinct("studentName");
+    res.json(students);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Endpoint to add a new sale
-// Expects JSON body: { user: "username", saleAmount: number }
-app.post('/sale', async (req, res) => {
+// POST /score – Adds a new score entry
+// Expects a JSON body: { studentName, score, scoreSource }
+app.post('/score', async (req, res) => {
   try {
-    const { user, saleAmount } = req.body;
-    if (!user || !saleAmount) {
-      return res.status(400).json({ error: 'Missing user or saleAmount' });
+    const { studentName, score, scoreSource } = req.body;
+    if (!studentName || score == null || !scoreSource) {
+      return res.status(400).json({ error: 'Missing studentName, score, or scoreSource' });
     }
-    const sale = {
-      item: user,
-      price: Number(saleAmount),
-      quantity: 1,
-      date: new Date()
+    const newScore = {
+      studentName,
+      score: Number(score),
+      scoreSource,
+      class: "Unknown", // For new score entries, we default to "Unknown"
+      timetable: new Date().toISOString()
     };
-    const result = await db.collection('sales').insertOne(sale);
+    const result = await db.collection('CSExamGame-UserScoreBoard').insertOne(newScore);
     res.json({ insertedId: result.insertedId });
   } catch (error) {
     res.status(500).json({ error: error.message });
